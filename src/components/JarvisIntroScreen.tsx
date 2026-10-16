@@ -8,6 +8,26 @@ interface JarvisIntroScreenProps {
 }
 
 export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter }) => {
+  // Step 0: Splash Logo Screen (david.jpeg) - 2.5s duration with fade-in/fade-out
+  const [showSplashLogo, setShowSplashLogo] = useState<boolean>(true);
+  const [splashFadeOut, setSplashFadeOut] = useState<boolean>(false);
+
+  useEffect(() => {
+    // 2.2s display + 0.5s fade out = 2.7s total, smooth transition to PIN code
+    const timerFade = setTimeout(() => {
+      setSplashFadeOut(true);
+    }, 2200);
+
+    const timerEnd = setTimeout(() => {
+      setShowSplashLogo(false);
+    }, 2700);
+
+    return () => {
+      clearTimeout(timerFade);
+      clearTimeout(timerEnd);
+    };
+  }, []);
+
   // Step 1: Security Passcode (6 digits, default '171080')
   // We start with digits ['1', '7', '1', '0', '8', '0'] or ['0', '0', '0', '0', '0', '0']
   const [digits, setDigits] = useState<string[]>(['0', '0', '0', '0', '0', '0']);
@@ -340,6 +360,52 @@ export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter })
           'radial-gradient(circle at center, rgba(6, 18, 32, 0.5) 0%, rgba(5, 7, 11, 0.95) 70%, #05070b 100%)',
       }}
     >
+      {/* PANTALLA DE PRESENTACIÓN PREVIA (SPLASH LOGO: david.jpeg) */}
+      {showSplashLogo && (
+        <div
+          onClick={() => {
+            setSplashFadeOut(true);
+            setTimeout(() => setShowSplashLogo(false), 200);
+          }}
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center select-none transition-opacity duration-500 cursor-pointer ${
+            splashFadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+          style={{
+            background:
+              'radial-gradient(circle at center, rgba(6, 28, 48, 0.95) 0%, rgba(5, 7, 15, 0.98) 65%, #03050a 100%)',
+          }}
+        >
+          {/* Ambient Holographic Cyber Grid Glow */}
+          <div className="relative flex flex-col items-center px-4 animate-fadeIn">
+            {/* Holographic Glowing Frame around david.jpeg */}
+            <div className="relative p-1.5 sm:p-2 rounded-3xl bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 shadow-[0_0_60px_rgba(6,182,212,0.6)] animate-pulse">
+              <img
+                src="./david.jpeg"
+                alt="David Ramírez - JARVIS Automotriz"
+                className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-2xl border border-cyan-300/40 shadow-2xl"
+              />
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-cyan-950/40 via-transparent to-transparent pointer-events-none" />
+            </div>
+
+            {/* Title & Badge */}
+            <div className="mt-6 text-center space-y-2">
+              <div className="font-orbitron font-extrabold text-xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-cyan-400 tracking-wider">
+                JARVIS AUTOMOTRIZ
+              </div>
+              <div className="font-mono text-xs sm:text-sm text-cyan-400/90 tracking-widest uppercase">
+                SISTEMA HOLOGRÁFICO // DAVID RAMÍREZ
+              </div>
+              <div className="pt-2 flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span className="font-mono text-[11px] sm:text-xs text-slate-400">
+                  INICIALIZANDO MOTOR GRÁFICO 3D...
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Background Interactive Three.js/Canvas Arc Reactor */}
       <canvas
         ref={canvasRef}

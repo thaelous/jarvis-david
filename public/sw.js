@@ -1,10 +1,11 @@
 // CAD Workshop 3D - Service Worker para PWA Offline (Android & Netlify)
-const CACHE_NAME = 'cad-workshop-3d-v2';
+const CACHE_NAME = 'cad-workshop-3d-v3';
 
 const STATIC_PRECACHE = [
   './',
   './index.html',
   './manifest.json',
+  './david.jpeg',
   './icon.svg',
   'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap'
 ];
@@ -39,8 +40,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
-
-  const url = new URL(req.url);
 
   // Solicitudes de navegación HTML (abrir o refrescar la aplicación)
   if (req.mode === 'navigate') {
@@ -89,9 +88,8 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Fallback para imágenes
           if (req.destination === 'image') {
-            return caches.match('./icon.svg');
+            return caches.match('./david.jpeg') || caches.match('./icon.svg');
           }
           return null;
         });
