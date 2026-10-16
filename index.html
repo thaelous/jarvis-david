@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>CAD Workshop 3D - Simulador Mecánico Holográfico</title>
+    <meta name="description" content="Simulador interactivo 3D de ensamble y desensamble mecánico con visualización CAD, despiece con explosión gradual y auto-acople magnético." />
+    <meta property="og:title" content="CAD Workshop 3D - Simulador Mecánico Holográfico" />
+    <meta property="og:description" content="Simulador interactivo 3D de ensamble y desensamble mecánico con visualización CAD, despiece con explosión gradual y auto-acople magnético." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- PWA & Mobile Standalone Capabilities -->
+    <meta name="theme-color" content="#1d4ed8" />
+    <meta name="background-color" content="#e2e8f0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CAD 3D" />
+
+    <!-- Google Fonts cargadas con URLs absolutas seguras HTTPS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <!-- Embedded High-Resolution Vector PWA Icon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%231e293b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23bg)'/%3E%3Cpolygon points='256,110 376,178 256,246 136,178' fill='%2338bdf8' stroke='%23ffffff' stroke-width='4'/%3E%3Cpolygon points='136,178 256,246 256,386 136,318' fill='%231d4ed8' stroke='%23ffffff' stroke-width='4'/%3E%3Cpolygon points='256,246 376,178 376,318 256,386' fill='%230284c7' stroke='%23ffffff' stroke-width='4'/%3E%3Ccircle cx='256' cy='246' r='30' fill='%230f172a' stroke='%2300e5ff' stroke-width='4'/%3E%3Ccircle cx='256' cy='246' r='6' fill='%2300e5ff'/%3E%3C/svg%3E" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%231e293b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='112' fill='url(%23bg)'/%3E%3Cpolygon points='256,110 376,178 256,246 136,178' fill='%2338bdf8' stroke='%23ffffff' stroke-width='4'/%3E%3Cpolygon points='136,178 256,246 256,386 136,318' fill='%231d4ed8' stroke='%23ffffff' stroke-width='4'/%3E%3Cpolygon points='256,246 376,178 376,318 256,386' fill='%230284c7' stroke='%23ffffff' stroke-width='4'/%3E%3Ccircle cx='256' cy='246' r='30' fill='%230f172a' stroke='%2300e5ff' stroke-width='4'/%3E%3Ccircle cx='256' cy='246' r='6' fill='%2300e5ff'/%3E%3C/svg%3E" />
+
+    <!-- Web App Manifest Embebido en HEAD para Instalación PWA Directa y Compatibilidad Netlify/Android -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22id%22%3A%22.%2F%22%2C%22name%22%3A%22CAD%20Workshop%203D%22%2C%22short_name%22%3A%22CAD%203D%22%2C%22start_url%22%3A%22.%22%2C%22scope%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22any%22%2C%22background_color%22%3A%22%23e2e8f0%22%2C%22theme_color%22%3A%22%231d4ed8%22%2C%22description%22%3A%22Simulador%20interactivo%203D%20de%20ensamble%20mec%C3%A1nico%20con%20visualizaci%C3%B3n%20CAD%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%253E%253Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%27112%27%20fill%3D%27%25231e293b%27%2F%253E%253Cpolygon%20points%3D%27256%2C110%20376%2C178%20256%2C246%20136%2C178%27%20fill%3D%27%252338bdf8%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Cpolygon%20points%3D%27136%2C178%20256%2C246%20256%2C386%20136%2C318%27%20fill%3D%27%25231d4ed8%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Cpolygon%20points%3D%27256%2C246%20376%2C178%20376%2C318%20256%2C386%27%20fill%3D%27%25230284c7%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Ccircle%20cx%3D%27256%27%20cy%3D%27246%27%20r%3D%2730%27%20fill%3D%27%25230f172a%27%20stroke%3D%27%252300e5ff%27%20stroke-width%3D%274%27%2F%253E%253C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%20512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%2C%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%253E%253Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%27112%27%20fill%3D%27%25231e293b%27%2F%253E%253Cpolygon%20points%3D%27256%2C110%20376%2C178%20256%2C246%20136%2C178%27%20fill%3D%27%252338bdf8%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Cpolygon%20points%3D%27136%2C178%20256%2C246%20256%2C386%20136%2C318%27%20fill%3D%27%25231d4ed8%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Cpolygon%20points%3D%27256%2C246%20376%2C178%20376%2C318%20256%2C386%27%20fill%3D%27%25230284c7%27%20stroke%3D%27%2523ffffff%27%20stroke-width%3D%274%27%2F%253E%253Ccircle%20cx%3D%27256%27%20cy%3D%27246%27%20r%3D%2730%27%20fill%3D%27%25230f172a%27%20stroke%3D%27%252300e5ff%27%20stroke-width%3D%274%27%2F%253E%253C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22maskable%22%7D%5D%7D" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Import Map con rutas absolutas seguras HTTPS para Three.js y Tween.js -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+        "@tweenjs/tween.js": "https://unpkg.com/@tweenjs/tween.js@25.0.0/dist/tween.esm.js"
+      }
+    }
+    </script>
+
+    <!-- Registro seguro y limpio de Service Worker (PWA Offline Android & Netlify) -->
+    <script>
+      if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .then(function(reg) {
+              console.log('[PWA] Service Worker registrado exitosamente en:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[PWA] Service Worker no registrado (modo aislado):', err);
+            });
+        });
+      }
+    </script>
+  </head>
+  <body class="light-mode antialiased overflow-hidden select-none touch-none-viewport">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
