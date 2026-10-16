@@ -3,6 +3,7 @@ import {
   Compass,
   Zap,
   Move,
+  RotateCw,
   Crosshair,
 } from 'lucide-react';
 import { TransformToolMode, ThemeMode } from '../types/cad';
@@ -80,6 +81,24 @@ export const AssembleControlsBar: React.FC<AssembleControlsBarProps> = ({
 
           <button
             onClick={() => {
+              sound.playClick(850);
+              onSetToolMode('rotate');
+            }}
+            className={`px-2 py-0.5 text-[11px] font-mono rounded-xs transition flex items-center gap-1 ${
+              toolMode === 'rotate'
+                ? isLight
+                  ? 'bg-cyan-100 border border-cyan-500 text-cyan-800 font-semibold'
+                  : 'bg-cyan-950 border border-cyan-400 text-cyan-200 shadow-[0_0_8px_rgba(6,182,212,0.3)]'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+            title="Modo Rotar: Girar componentes en los ejes X, Y, Z"
+          >
+            <RotateCw className="w-3 h-3 text-cyan-500" />
+            <span>Rotar</span>
+          </button>
+
+          <button
+            onClick={() => {
               sound.playClick(600);
               onToggleGizmo();
             }}
@@ -129,6 +148,42 @@ export const AssembleControlsBar: React.FC<AssembleControlsBarProps> = ({
             {Math.round(explodeProgress * 100)}%
           </span>
         </div>
+
+        {/* BOTÓN DUAL DE INTERACCIÓN: MOVER Y ROTAR PIEZAS (#btn-mode) */}
+        <button
+          id="btn-mode"
+          data-testid="btn-mode"
+          onClick={() => {
+            sound.playClick(850);
+            onSetToolMode(toolMode === 'translate' ? 'rotate' : 'translate');
+          }}
+          className={`px-1.5 py-1 xs:px-2 sm:px-2.5 sm:py-1.5 border rounded-xs font-mono flex items-center gap-1 transition font-semibold cursor-pointer shrink-0 active:scale-95 ${
+            toolMode === 'translate'
+              ? isLight
+                ? 'bg-cyan-100 hover:bg-cyan-200 border-cyan-500 text-cyan-900 shadow-sm'
+                : 'bg-cyan-950 hover:bg-cyan-900 border-cyan-400 text-cyan-200 shadow-[0_0_10px_rgba(6,182,212,0.35)]'
+              : isLight
+              ? 'bg-indigo-100 hover:bg-indigo-200 border-indigo-500 text-indigo-900 shadow-sm'
+              : 'bg-indigo-950 hover:bg-indigo-900 border-indigo-400 text-indigo-200 shadow-[0_0_10px_rgba(99,102,241,0.35)]'
+          }`}
+          title={
+            toolMode === 'translate'
+              ? 'Modo 🖐️ Mover activo. Toca para alternar a 🔄 Rotar pieza.'
+              : 'Modo 🔄 Rotar activo. Toca para alternar a 🖐️ Mover pieza.'
+          }
+        >
+          <span className="shrink-0 text-xs">
+            {toolMode === 'translate' ? '🖐️' : '🔄'}
+          </span>
+          <span className="whitespace-nowrap font-tech font-bold text-[11px] sm:text-xs">
+            {toolMode === 'translate' ? 'Mover' : 'Rotar'}
+          </span>
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              toolMode === 'translate' ? 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]' : 'bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]'
+            }`}
+          />
+        </button>
 
         {/* 2. BOTÓN [⚡ Acoplar Todo] */}
         <button
