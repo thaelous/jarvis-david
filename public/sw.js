@@ -1,11 +1,12 @@
 // CAD Workshop 3D - Service Worker para PWA Offline (Android & Netlify)
-const CACHE_NAME = 'cad-workshop-3d-v3';
+const CACHE_NAME = 'cad-workshop-3d-v4';
 
 const STATIC_PRECACHE = [
   './',
   './index.html',
   './manifest.json',
   './david.jpeg',
+  './david.mp4',
   './icon.svg',
   'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap'
 ];
@@ -64,11 +65,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Recursos estáticos: scripts, estilos, fuentes, imágenes (Cache-First con actualización de fondo)
+  // Recursos estáticos: scripts, estilos, fuentes, imágenes, videos (Cache-First con actualización de fondo)
   event.respondWith(
     caches.match(req).then((cachedResponse) => {
       if (cachedResponse) {
-        // En segundo plano refrescar si hay conexión
         fetch(req).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(req, networkResponse));
@@ -90,6 +90,9 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           if (req.destination === 'image') {
             return caches.match('./david.jpeg') || caches.match('./icon.svg');
+          }
+          if (req.destination === 'video') {
+            return caches.match('./david.mp4');
           }
           return null;
         });

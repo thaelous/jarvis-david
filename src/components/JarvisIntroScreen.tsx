@@ -8,25 +8,9 @@ interface JarvisIntroScreenProps {
 }
 
 export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter }) => {
-  // Step 0: Splash Logo Screen (david.jpeg) - 2.5s duration with fade-in/fade-out
-  const [showSplashLogo, setShowSplashLogo] = useState<boolean>(true);
-  const [splashFadeOut, setSplashFadeOut] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Exactly 3.0s total: 2.5s display + 0.5s fade-out, giving way to PIN code 171080
-    const timerFade = setTimeout(() => {
-      setSplashFadeOut(true);
-    }, 2500);
-
-    const timerEnd = setTimeout(() => {
-      setShowSplashLogo(false);
-    }, 3000);
-
-    return () => {
-      clearTimeout(timerFade);
-      clearTimeout(timerEnd);
-    };
-  }, []);
+  // Video Cinematic state (david.mp4 played post-PIN verification)
+  const [showVideoCinematic, setShowVideoCinematic] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Step 1: Security Passcode (6 digits, default '171080')
   // We start with digits ['1', '7', '1', '0', '8', '0'] or ['0', '0', '0', '0', '0', '0']
@@ -75,13 +59,13 @@ export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter })
     sound.resumeContext();
     const entered = digits.join('');
     if (entered === '171080') {
-      // Correct! Vault unlock audio + retract cylinder screen
+      // Correct! Vault unlock audio + trigger david.mp4 cinematic
       sound.playVaultUnlock();
-      setIsUnlocked(true);
       flashAlphaRef.current = 0.85;
       setTimeout(() => {
         flashAlphaRef.current = 0.0;
       }, 300);
+      setShowVideoCinematic(true);
     } else {
       // Incorrect! Red flash + error alert sound + shake
       sound.playErrorAlert();
@@ -360,49 +344,38 @@ export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter })
           'radial-gradient(circle at center, rgba(6, 18, 32, 0.5) 0%, rgba(5, 7, 11, 0.95) 70%, #05070b 100%)',
       }}
     >
-      {/* PANTALLA DE PRESENTACIÓN PREVIA (SPLASH LOGO: david.jpeg) */}
-      {showSplashLogo && (
-        <div
-          onClick={() => {
-            setSplashFadeOut(true);
-            setTimeout(() => setShowSplashLogo(false), 200);
-          }}
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center select-none transition-opacity duration-500 cursor-pointer ${
-            splashFadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-          style={{
-            background:
-              'radial-gradient(circle at center, rgba(6, 28, 48, 0.95) 0%, rgba(5, 7, 15, 0.98) 65%, #03050a 100%)',
-          }}
-        >
-          {/* Ambient Holographic Cyber Grid Glow */}
-          <div className="relative flex flex-col items-center px-4 animate-fadeIn">
-            {/* Holographic Glowing Frame around david.jpeg */}
-            <div className="relative p-1.5 sm:p-2 rounded-3xl bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 shadow-[0_0_60px_rgba(6,182,212,0.6)] animate-pulse">
-              <img
-                src="./david.jpeg"
-                alt="David Ramírez - JARVIS Automotriz"
-                className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-2xl border border-cyan-300/40 shadow-2xl"
-              />
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-cyan-950/40 via-transparent to-transparent pointer-events-none" />
-            </div>
-
-            {/* Title & Badge */}
-            <div className="mt-6 text-center space-y-2">
-              <div className="font-orbitron font-extrabold text-xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-cyan-400 tracking-wider">
-                JARVIS AUTOMOTRIZ
-              </div>
-              <div className="font-mono text-xs sm:text-sm text-cyan-400/90 tracking-widest uppercase">
-                SISTEMA HOLOGRÁFICO // DAVID RAMÍREZ
-              </div>
-              <div className="pt-2 flex items-center justify-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span className="font-mono text-[11px] sm:text-xs text-slate-400">
-                  INICIALIZANDO MOTOR GRÁFICO 3D...
-                </span>
-              </div>
-            </div>
+      {/* CINEMÁTICA EN VÍDEO (david.mp4) POST-PIN */}
+      {showVideoCinematic && (
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-black select-none">
+          <video
+            ref={videoRef}
+            src="./david.mp4"
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            onEnded={() => {
+              setShowVideoCinematic(false);
+              setIsUnlocked(true);
+            }}
+            onError={() => {
+              setShowVideoCinematic(false);
+              setIsUnlocked(true);
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
+          <div className="absolute top-6 left-6 z-10 flex items-center gap-2 font-mono text-cyan-400 text-xs tracking-widest bg-slate-950/80 px-3 py-1.5 rounded-sm border border-cyan-500/40 backdrop-blur-md">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span>JARVIS CINEMATIC STREAM // DAVID RAMÍREZ</span>
           </div>
+          <button
+            onClick={() => {
+              setShowVideoCinematic(false);
+              setIsUnlocked(true);
+            }}
+            className="absolute bottom-8 z-10 px-6 py-3 bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-400 text-cyan-200 font-orbitron font-bold text-xs tracking-widest rounded-sm shadow-[0_0_20px_rgba(6,182,212,0.5)] transition active:scale-95 cursor-pointer"
+          >
+            SALTAR / CONTINUAR &gt;&gt;
+          </button>
         </div>
       )}
 
