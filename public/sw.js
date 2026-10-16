@@ -1,80 +1,99 @@
-// Service Worker para CAD Workshop 3D - PWA 100% Offline
-const CACHE_NAME = 'cad-workshop-v4';
+// CAD Workshop 3D - Service Worker para PWA Offline (Android & Netlify)
+const CACHE_NAME = 'cad-workshop-3d-v2';
 
-const PRECACHE_ASSETS = [
+const STATIC_PRECACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap'
 ];
 
+// Instalación: Precargar recursos críticos
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
+      return cache.addAll(STATIC_PRECACHE).catch((err) => {
         console.warn('[SW] Fallback parcial durante precache:', err);
       });
     }).then(() => self.skipWaiting())
   );
 });
 
+// Activación: Limpiar cachés antiguas y tomar control inmediato
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
+    caches.keys().then((keys) => {
+      return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
-      )
-    ).then(() => self.clients.claim())
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
+// Intercepción de solicitudes de red con estrategia Cache-First y fallback offline
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
+  const url = new URL(req.url);
 
-  // Excluir esquemas no HTTP/HTTPS (por ejemplo chrome-extension, blob, data, etc.)
-  if (!url.protocol.startsWith('http')) return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // En segundo plano actualizamos la caché si hay conectividad
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-              const resClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, resClone);
-              });
-            }
-          })
-          .catch(() => {
-            // Sin conexión a red, usamos la versión en caché
+  // Solicitudes de navegación HTML (abrir o refrescar la aplicación)
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // Si está sin conexión, servir index.html desde la caché
+          const cached = await caches.match('./index.html') || await caches.match('./');
+          if (cached) return cached;
+          return new Response('Aplicación CAD 3D sin conexión disponible.', {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
           });
+        })
+    );
+    return;
+  }
+
+  // Recursos estáticos: scripts, estilos, fuentes, imágenes (Cache-First con actualización de fondo)
+  event.respondWith(
+    caches.match(req).then((cachedResponse) => {
+      if (cachedResponse) {
+        // En segundo plano refrescar si hay conexión
+        fetch(req).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, networkResponse));
+          }
+        }).catch(() => {/* Offline silente */});
 
         return cachedResponse;
       }
 
-      return fetch(event.request)
+      return fetch(req)
         .then((networkResponse) => {
-          if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
             return networkResponse;
           }
           const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, responseToCache));
           return networkResponse;
         })
         .catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html') || caches.match('./');
+          // Fallback para imágenes
+          if (req.destination === 'image') {
+            return caches.match('./icon.svg');
           }
+          return null;
         });
     })
   );
