@@ -1723,9 +1723,15 @@ export const CADViewport: React.FC<CADViewportProps> = ({
 
     // Adaptive Auto-Framing: Calibrated for Mobile Portrait and Desktop Landscape
     if (modelGroupRef.current && cameraRef.current && orbitControlsRef.current) {
-      const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
-      orbitControlsRef.current.target.copy(framing.center);
-      cameraRef.current.position.copy(framing.cameraPos);
+      if (modelDef.id === 'birthday_cake') {
+        const isMobile = cameraRef.current.aspect < 1.0;
+        orbitControlsRef.current.target.set(0, 1.45, 0.4);
+        cameraRef.current.position.set(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+      } else {
+        const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+        orbitControlsRef.current.target.copy(framing.center);
+        cameraRef.current.position.copy(framing.cameraPos);
+      }
       orbitControlsRef.current.update();
     }
 
@@ -1888,37 +1894,64 @@ export const CADViewport: React.FC<CADViewportProps> = ({
   useEffect(() => {
     if (!resetViewTrigger || !cameraRef.current || !orbitControlsRef.current || !modelGroupRef.current) return;
 
-    const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+    const isBirthday = modelDef.id === 'birthday_cake';
+    const isMobile = cameraRef.current.aspect < 1.0;
+
+    let targetPos: THREE.Vector3;
+    let targetTarget: THREE.Vector3;
+
+    if (isBirthday) {
+      targetPos = new THREE.Vector3(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+      targetTarget = new THREE.Vector3(0, 1.45, 0.4);
+    } else {
+      const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+      targetPos = framing.cameraPos.clone();
+      targetTarget = framing.center.clone();
+    }
 
     cameraTweenRef.current = {
       startPos: cameraRef.current.position.clone(),
-      targetPos: framing.cameraPos.clone(),
+      targetPos,
       startTarget: orbitControlsRef.current.target.clone(),
-      targetTarget: framing.center.clone(),
+      targetTarget,
       startTime: performance.now(),
       duration: 450,
     };
-  }, [resetViewTrigger]);
+  }, [resetViewTrigger, modelDef.id]);
 
   // 4. Cinematic Fly-in Entrance Tween from distant dramatic angle to nominal CAD view
   useEffect(() => {
     if (!flyInTrigger || !cameraRef.current || !orbitControlsRef.current || !modelGroupRef.current) return;
 
-    const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
-    const startPos = framing.cameraPos.clone().add(new THREE.Vector3(8, 6, 10));
+    const isBirthday = modelDef.id === 'birthday_cake';
+    const isMobile = cameraRef.current.aspect < 1.0;
+
+    let targetPos: THREE.Vector3;
+    let targetTarget: THREE.Vector3;
+
+    if (isBirthday) {
+      targetPos = new THREE.Vector3(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+      targetTarget = new THREE.Vector3(0, 1.45, 0.4);
+    } else {
+      const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+      targetPos = framing.cameraPos.clone();
+      targetTarget = framing.center.clone();
+    }
+
+    const startPos = targetPos.clone().add(new THREE.Vector3(0, 4, 8));
 
     cameraRef.current.position.copy(startPos);
-    orbitControlsRef.current.target.copy(framing.center);
+    orbitControlsRef.current.target.copy(targetTarget);
 
     cameraTweenRef.current = {
       startPos,
-      targetPos: framing.cameraPos.clone(),
-      startTarget: framing.center.clone(),
-      targetTarget: framing.center.clone(),
+      targetPos,
+      startTarget: targetTarget.clone(),
+      targetTarget,
       startTime: performance.now(),
       duration: 1200, // Smooth 1200ms cinematic swoop to the perfectly framed position
     };
-  }, [flyInTrigger]);
+  }, [flyInTrigger, modelDef.id]);
 
   // Handle Render Modes (PBR, Hologram, Wireframe, X-Ray) - Persistencia Absoluta de Materiales PBR
   useEffect(() => {
@@ -2366,8 +2399,14 @@ export const CADViewport: React.FC<CADViewportProps> = ({
         controls.target.copy(center);
         break;
       case 'front':
-        camera.position.set(center.x, center.y, center.z + dist * 1.15);
-        controls.target.copy(center);
+        if (modelDef.id === 'birthday_cake') {
+          const isMobile = camera.aspect < 1.0;
+          camera.position.set(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+          controls.target.set(0, 1.45, 0.4);
+        } else {
+          camera.position.set(center.x, center.y, center.z + dist * 1.15);
+          controls.target.copy(center);
+        }
         break;
       case 'side':
         camera.position.set(center.x + dist * 1.15, center.y, center.z);
@@ -2379,12 +2418,18 @@ export const CADViewport: React.FC<CADViewportProps> = ({
         break;
       case 'reset':
       default:
-        camera.position.set(center.x + dist * 0.65, center.y + dist * 0.45, center.z + dist * 0.85);
-        controls.target.copy(center);
+        if (modelDef.id === 'birthday_cake') {
+          const isMobile = camera.aspect < 1.0;
+          camera.position.set(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+          controls.target.set(0, 1.45, 0.4);
+        } else {
+          camera.position.set(center.x + dist * 0.65, center.y + dist * 0.45, center.z + dist * 0.85);
+          controls.target.copy(center);
+        }
         break;
     }
     controls.update();
-  }, [cameraPresetTrigger]);
+  }, [cameraPresetTrigger, modelDef.id]);
 
   // Gestor nativo de doble clic de escritorio (complementario al doble toque rápido)
   const handleDoubleClick = useCallback(

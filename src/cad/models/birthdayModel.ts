@@ -39,13 +39,13 @@ function createCelebrationSignTexture(): THREE.CanvasTexture {
     });
 
     // 5. Top Header
-    ctx.font = 'bold 36px "Montserrat", "Segoe UI", sans-serif';
+    ctx.font = 'bold 32px "Montserrat", "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#38bdf8';
-    ctx.fillText('★ EDICIÓN ESPECIAL // JARVIS AUTOMOTRIZ ★', 1024, 110);
+    ctx.fillText('★ EDICIÓN ESPECIAL // JARVIS AUTOMOTRIZ ★', 1024, 85);
 
-    // 6. Main dedication text: "¡Feliz Cumpleaños David!" in bold 72px
-    ctx.font = 'bold 72px "Montserrat", "Segoe UI", sans-serif';
+    // 6. Main dedication text: "¡Feliz Cumpleaños David!" in bold 64px
+    ctx.font = 'bold 64px "Montserrat", "Segoe UI", sans-serif';
 
     // Dark shadow and bevel for maximum contrast
     ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
@@ -55,23 +55,33 @@ function createCelebrationSignTexture(): THREE.CanvasTexture {
 
     // Solid dark outline behind the text for crisp razor-sharp definition
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 14;
-    ctx.strokeText('¡Feliz Cumpleaños David!', 1024, 258);
+    ctx.lineWidth = 12;
+    ctx.strokeText('¡Feliz Cumpleaños David!', 1024, 205);
 
     // Brilliant white (#ffffff) high-contrast foreground fill
     ctx.fillStyle = '#ffffff';
-    ctx.fillText('¡Feliz Cumpleaños David!', 1024, 258);
+    ctx.fillText('¡Feliz Cumpleaños David!', 1024, 205);
 
     // Subtle radiant golden edge highlight
     ctx.shadowBlur = 0;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = '#fef08a';
-    ctx.strokeText('¡Feliz Cumpleaños David!', 1024, 258);
+    ctx.strokeText('¡Feliz Cumpleaños David!', 1024, 205);
 
-    // 7. Bottom commemorative badge
-    ctx.font = 'bold 34px "Montserrat", "Segoe UI", sans-serif';
+    // 7. Second Line: "46 años de esfuerzo, lucha y compromiso"
+    ctx.font = 'bold 40px "Montserrat", "Segoe UI", sans-serif';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 8;
+    ctx.strokeText('46 años de esfuerzo, lucha y compromiso', 1024, 325);
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText('★ 46 AÑOS DE VISIÓN, INGENIERÍA & CREATIVIDAD ★', 1024, 400);
+    ctx.fillText('46 años de esfuerzo, lucha y compromiso', 1024, 325);
+
+    // 8. Bottom commemorative badge
+    ctx.font = 'bold 28px "Montserrat", "Segoe UI", sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('★ JARVIS AUTOMOTRIZ & INGENIERÍA 3D ★', 1024, 435);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -79,6 +89,87 @@ function createCelebrationSignTexture(): THREE.CanvasTexture {
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
   texture.anisotropy = 16;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+// Procedural Fondant Relief Texture (Quilted Diamond Lattice & Subtle Pastry Swags)
+function createFondantBumpTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, 1024, 512);
+
+    // Subtle pastry grain
+    for (let i = 0; i < 4000; i++) {
+      const rx = Math.random() * 1024;
+      const ry = Math.random() * 512;
+      const gray = 124 + Math.random() * 8;
+      ctx.fillStyle = `rgb(${gray},${gray},${gray})`;
+      ctx.fillRect(rx, ry, 2, 2);
+    }
+
+    // Quilted diamond lattice
+    const step = 64;
+    for (let x = -512; x < 1536; x += step) {
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#606060';
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 512, 512);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#9c9c9c';
+      ctx.beginPath();
+      ctx.moveTo(x + 1.5, 0);
+      ctx.lineTo(x + 513.5, 512);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#606060';
+      ctx.beginPath();
+      ctx.moveTo(x, 512);
+      ctx.lineTo(x + 512, 0);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#9c9c9c';
+      ctx.beginPath();
+      ctx.moveTo(x + 1.5, 512);
+      ctx.lineTo(x + 513.5, 0);
+      ctx.stroke();
+    }
+
+    // Scalloped frosting relief bands
+    for (const y of [128, 256, 384]) {
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#555555';
+      ctx.beginPath();
+      for (let x = 0; x <= 1024; x += 16) {
+        const offset = Math.sin((x / 16) * Math.PI) * 8;
+        if (x === 0) ctx.moveTo(x, y + offset);
+        else ctx.lineTo(x, y + offset);
+      }
+      ctx.stroke();
+
+      ctx.strokeStyle = '#b0b0b0';
+      ctx.beginPath();
+      for (let x = 0; x <= 1024; x += 16) {
+        const offset = Math.sin((x / 16) * Math.PI) * 8;
+        if (x === 0) ctx.moveTo(x, y + offset - 1.5);
+        else ctx.lineTo(x, y + offset - 1.5);
+      }
+      ctx.stroke();
+    }
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 1);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
   return texture;
 }
@@ -145,7 +236,7 @@ const assemblySteps: TutorialStep[] = [
     action: 'assemble',
     title: 'Montaje del Primer Piso (Fondant Vainilla & Fresas)',
     instruction: 'Desciende el piso inferior de bizcocho esponjoso con fondant suave de vainilla.',
-    tip: 'Las 20 rosetas de crema batida y fresas frescas coronan el perímetro de la base.',
+    tip: 'Las rosetas de crema batida, perlas de azúcar y fresas coronan el perímetro de la base.',
     targetVectorName: 'Eje Y (Descenso al centro de la bandeja)',
   },
   {
@@ -202,7 +293,7 @@ const disassemblySteps: TutorialStep[] = [
     action: 'disassemble',
     title: 'Desmontaje del Segundo Piso',
     instruction: 'Separa el piso superior hacia arriba para inspeccionar el relleno interno.',
-    tip: 'Revela la textura esponjosa del bizcocho de vainilla.',
+    tip: 'Revela la textura acolchada del fondant de vainilla.',
     targetVectorName: 'Eje Y (Elevación vertical)',
   },
   {
@@ -230,7 +321,7 @@ export const birthdayModel: MechanicalModelDefinition = {
   name: '7. 🎁 Sorpresa',
   category: 'Celebración Especial / Edición Conmemorativa',
   description:
-    'Pastel festivo bicapa de alta pastelería modelado proceduralmente (fondant blanco marfil/vainilla PBR, rosetones de crema batida y fresas rojas brillantes), velas numéricas 3D extruidas "46" en oro macizo con flamas vivas emisivas y luz puntual cálida, letrero frontal erguido "¡Feliz Cumpleaños David!", espectáculo pirotécnico y la melodía canónica de "Happy Birthday to You".',
+    'Pastel festivo bicapa de alta pastelería modelado proceduralmente (fondant blanco marfil/vainilla con relieve acolchado PBR, guirnaldas de crema batida, perlas de azúcar, fresas lustradas y cerezas glaseadas), velas numéricas 3D extruidas "46" en oro macizo con flamas vivas emisivas y luz puntual cálida, letrero frontal erguido "¡Feliz Cumpleaños David!", espectáculo pirotécnico y la melodía canónica de "Happy Birthday to You".',
   specs: {
     weightKg: '4.60 kg',
     material: 'Bizcocho Genovés, Fondant PBR Vainilla, Oro 24K, Cera Festiva & Plata',
@@ -261,36 +352,36 @@ export const birthdayModel: MechanicalModelDefinition = {
       {
         id: 'cake_tier_1',
         name: 'Piso Inferior de Fondant Vainilla & Fresas',
-        technicalName: 'Tier 1 Vanilla Fondant Sponge & Glazed Strawberries',
+        technicalName: 'Tier 1 Vanilla Fondant Sponge, Quilted Relief & Berries',
         category: 'Pastelería PBR / Capa 1',
-        materialName: 'Fondant Blanco Marfil PBR + Fresas Glaseadas',
+        materialName: 'Fondant Vainilla PBR + Perlas de Azúcar & Fresas',
         materialDescription:
-          'Piso cilíndrico de bizcocho recubierto de fondant color vainilla suave (roughness 0.3), guirnalda de crema batida y 20 fresas rojas lustradas.',
+          'Piso cilíndrico de bizcocho recubierto de fondant texturizado en rombos acolchados (roughness 0.32), guirnalda de crema batida, perlas de azúcar y fresas/cerezas glaseadas.',
         defaultPosition: [0, 0, 0],
         defaultRotation: [0, 0, 0],
         explodeVector: [0, -0.6, 0],
         explodeDistance: 1.8,
         snapTolerance: 0.8,
         color: 0xfbf8f2,
-        metalness: 0.05,
-        roughness: 0.3,
+        metalness: 0.04,
+        roughness: 0.32,
       },
       {
         id: 'cake_tier_2',
         name: 'Piso Superior de Fondant & Crema Batida',
-        technicalName: 'Tier 2 Vanilla Fondant Top with Whipped Cream Rosettes',
+        technicalName: 'Tier 2 Vanilla Fondant Top with Whipped Cream & Cherries',
         category: 'Pastelería PBR / Capa 2',
-        materialName: 'Fondant Vainilla + Ribete Dorado & Frutos Rojos',
+        materialName: 'Fondant Vainilla + Ribete Dorado, Perlas & Cerezas',
         materialDescription:
-          'Piso superior cilíndrico escalonado con fondant suave de vainilla, ribete de oro en la base y 14 rosetones de crema con frutos rojos.',
+          'Piso superior cilíndrico escalonado con fondant acolchado, ribete de perlas doradas y rosetones de crema con cerezas glaseadas.',
         defaultPosition: [0, 0, 0],
         defaultRotation: [0, 0, 0],
         explodeVector: [0, 1.0, 0],
         explodeDistance: 2.4,
         snapTolerance: 0.8,
         color: 0xfdfbf7,
-        metalness: 0.05,
-        roughness: 0.3,
+        metalness: 0.04,
+        roughness: 0.32,
       },
       {
         id: 'candles_46',
@@ -299,15 +390,15 @@ export const birthdayModel: MechanicalModelDefinition = {
         category: 'Iluminación Festiva / Oro 24K',
         materialName: 'Oro Macizo 3D Pulido + Flamas Emisivas & PointLight',
         materialDescription:
-          'Números "4" y "6" modelados con extrusión sólida y grosor 3D en oro brillante, mechas de cera, flamas en forma de gota de alta luminosidad (emissive 3.0) y luz puntual cálida dinámica.',
+          'Números "4" y "6" modelados con extrusión sólida y grosor 3D en oro brillante, mechas de cera, flamas en forma de gota de alta luminosidad (emissive 3.5) y luz puntual cálida dinámica.',
         defaultPosition: [0, 0, 0],
         defaultRotation: [0, 0, 0],
         explodeVector: [0, 2.4, 0],
         explodeDistance: 3.2,
         snapTolerance: 0.8,
         color: 0xffd700,
-        metalness: 0.92,
-        roughness: 0.14,
+        metalness: 0.94,
+        roughness: 0.12,
       },
       {
         id: 'dedication_sign',
@@ -316,7 +407,7 @@ export const birthdayModel: MechanicalModelDefinition = {
         category: 'Placa Conmemorativa Frontal',
         materialName: 'Marco Dorado + Lienzo HD Grabado Frontal',
         materialDescription:
-          'Letrero físico tridimensional erguido al frente de la base con marco biselado dorado, borde cian neón y el texto exacto en relieve: "¡Feliz Cumpleaños David!".',
+          'Letrero físico tridimensional erguido al frente de la base con marco biselado dorado, borde cian neón y dos líneas grabadas de alta nitidez.',
         defaultPosition: [0, 0, 0],
         defaultRotation: [0, 0, 0],
         explodeVector: [0, 0.4, 2.4],
@@ -331,7 +422,7 @@ export const birthdayModel: MechanicalModelDefinition = {
     const buildMeshes = (materialsMap: Map<string, THREE.Material>): Map<string, THREE.Group> => {
       const groups = new Map<string, THREE.Group>();
 
-      // Materiales PBR de Calidad Prémium
+      // Materiales PBR de Calidad Prémium de Repostería
       const woodMat = new THREE.MeshStandardMaterial({
         color: 0x4a2a16,
         roughness: 0.35,
@@ -339,40 +430,67 @@ export const birthdayModel: MechanicalModelDefinition = {
       });
 
       const silverMat = new THREE.MeshStandardMaterial({
-        color: 0xf1f5f9,
-        roughness: 0.12,
-        metalness: 0.92,
+        color: 0xf8fafc,
+        roughness: 0.08,
+        metalness: 0.96,
       });
 
-      // Fondant suave de vainilla blanco marfil (roughness: 0.3)
+      // Fondant suave de vainilla blanco marfil con relieve acolchado procedural
+      const fondantBump = createFondantBumpTexture();
       const fondantMat = new THREE.MeshStandardMaterial({
-        color: 0xfbf8f2,
-        roughness: 0.3,
+        color: 0xfcf9f2,
+        roughness: 0.32,
         metalness: 0.04,
+        bumpMap: fondantBump,
+        bumpScale: 0.035,
       });
 
       const frostingWhiteMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.22,
+        roughness: 0.18,
         metalness: 0.02,
+      });
+
+      const sugarPearlMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.12,
+        metalness: 0.4,
+      });
+
+      const goldPearlMat = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        roughness: 0.15,
+        metalness: 0.9,
       });
 
       const strawberryMat = new THREE.MeshStandardMaterial({
         color: 0xd90429,
-        roughness: 0.12,
+        roughness: 0.14,
         metalness: 0.15,
+      });
+
+      const cherryMat = new THREE.MeshStandardMaterial({
+        color: 0x880010,
+        roughness: 0.10,
+        metalness: 0.20,
+      });
+
+      const cherryStemMat = new THREE.MeshStandardMaterial({
+        color: 0x5a3818,
+        roughness: 0.4,
+        metalness: 0.1,
       });
 
       const mintLeafMat = new THREE.MeshStandardMaterial({
         color: 0x16a34a,
-        roughness: 0.35,
+        roughness: 0.30,
         metalness: 0.05,
       });
 
       const solidGoldMat = new THREE.MeshStandardMaterial({
         color: 0xffd700,
-        roughness: 0.14,
-        metalness: 0.92,
+        roughness: 0.12,
+        metalness: 0.95,
       });
 
       const candleWickMat = new THREE.MeshStandardMaterial({
@@ -381,12 +499,12 @@ export const birthdayModel: MechanicalModelDefinition = {
         metalness: 0.1,
       });
 
-      // Flama viva en forma de gota con material emisivo intenso (emissive: 0xff5500, emissiveIntensity: 3.0)
+      // Flama viva en forma de gota con material emisivo intenso
       const flameMat = new THREE.MeshStandardMaterial({
-        color: 0xffa500,
+        color: 0xff9900,
         emissive: 0xff5500,
-        emissiveIntensity: 3.0,
-        roughness: 0.1,
+        emissiveIntensity: 3.5,
+        roughness: 0.08,
         transparent: true,
         opacity: 0.96,
       });
@@ -394,9 +512,55 @@ export const birthdayModel: MechanicalModelDefinition = {
       const flameCoreMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         emissive: 0x00e5ff,
-        emissiveIntensity: 4.0,
-        roughness: 0.05,
+        emissiveIntensity: 4.5,
+        roughness: 0.04,
       });
+
+      // Helper para crear un rosetón de crema batida con estrías artesanales
+      const createSwirledRosette = (scale: number): THREE.Group => {
+        const rosette = new THREE.Group();
+        const baseGeo = new THREE.SphereGeometry(scale, 10, 8);
+        baseGeo.scale(1, 0.7, 1);
+        const baseMesh = new THREE.Mesh(baseGeo, frostingWhiteMat);
+        rosette.add(baseMesh);
+
+        // 6 pétalos/lóbulos periféricos estriados
+        for (let p = 0; p < 6; p++) {
+          const pAngle = (p * Math.PI * 2) / 6;
+          const pGeo = new THREE.SphereGeometry(scale * 0.45, 8, 6);
+          pGeo.scale(1.2, 0.6, 0.8);
+          const pMesh = new THREE.Mesh(pGeo, frostingWhiteMat);
+          pMesh.position.set(Math.cos(pAngle) * scale * 0.55, -scale * 0.15, Math.sin(pAngle) * scale * 0.55);
+          pMesh.rotation.y = pAngle;
+          rosette.add(pMesh);
+        }
+
+        // Pico puntiagudo superior con giro
+        const tipGeo = new THREE.ConeGeometry(scale * 0.4, scale * 0.8, 8);
+        const tipMesh = new THREE.Mesh(tipGeo, frostingWhiteMat);
+        tipMesh.position.set(0, scale * 0.45, 0);
+        rosette.add(tipMesh);
+
+        return rosette;
+      };
+
+      // Helper para crear una cereza brillante con tallo curvado
+      const createCherryWithStem = (): THREE.Group => {
+        const cherryGroup = new THREE.Group();
+        const cherryGeo = new THREE.SphereGeometry(0.075, 14, 12);
+        const cherryMesh = new THREE.Mesh(cherryGeo, cherryMat);
+        cherryMesh.castShadow = true;
+        cherryGroup.add(cherryMesh);
+
+        // Tallo fino marrón/dorado
+        const stemGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.14, 6);
+        stemGeo.rotateZ(0.25);
+        const stemMesh = new THREE.Mesh(stemGeo, cherryStemMat);
+        stemMesh.position.set(0.02, 0.09, 0);
+        cherryGroup.add(stemMesh);
+
+        return cherryGroup;
+      };
 
       // =========================================================================
       // 1. BASE Y CHAROLA DE PRESENTACIÓN (table_base)
@@ -467,7 +631,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       const tier1Group = new THREE.Group();
       tier1Group.name = 'cake_tier_1';
 
-      // Cilindro del piso inferior (radio 1.65, altura 0.70)
+      // Cilindro del piso inferior con textura de fondant acolchada (radio 1.65, altura 0.70)
       const tier1Geo = new THREE.CylinderGeometry(1.6, 1.65, 0.70, 48);
       const tier1Mesh = new THREE.Mesh(tier1Geo, fondantMat);
       tier1Mesh.position.set(0, 1.42, 0);
@@ -481,7 +645,18 @@ export const birthdayModel: MechanicalModelDefinition = {
       tier1Belt.position.set(0, 1.10, 0);
       tier1Group.add(tier1Belt);
 
-      // 20 Rosetones de crema batida y fresas frescas en el borde superior
+      // Guirnalda de perlas de azúcar lustrosas en la base del piso 1 (42 perlas)
+      const numPearls1 = 42;
+      const pearlRadius1 = 1.67;
+      for (let p = 0; p < numPearls1; p++) {
+        const pAngle = (p * Math.PI * 2) / numPearls1;
+        const pearlGeo = new THREE.SphereGeometry(0.035, 8, 8);
+        const pearlMesh = new THREE.Mesh(pearlGeo, p % 3 === 0 ? goldPearlMat : sugarPearlMat);
+        pearlMesh.position.set(Math.cos(pAngle) * pearlRadius1, 1.11, Math.sin(pAngle) * pearlRadius1);
+        tier1Group.add(pearlMesh);
+      }
+
+      // 20 Rosetones de crema batida definidos, fresas frescas y cerezas en el borde superior
       const r1 = 1.50;
       const count1 = 20;
       for (let i = 0; i < count1; i++) {
@@ -489,26 +664,32 @@ export const birthdayModel: MechanicalModelDefinition = {
         const x = Math.cos(angle) * r1;
         const z = Math.sin(angle) * r1;
 
-        // Rosetón de crema abombado
-        const creamGeo = new THREE.SphereGeometry(0.095, 12, 10);
-        creamGeo.scale(1, 0.75, 1);
-        const cream = new THREE.Mesh(creamGeo, frostingWhiteMat);
-        cream.position.set(x, 1.77, z);
-        tier1Group.add(cream);
+        // Rosetón de crema con estrías y pico artesanal
+        const rosette = createSwirledRosette(0.095);
+        rosette.position.set(x, 1.77, z);
+        tier1Group.add(rosette);
 
-        // Fresa o cereza glaseada intercalada
+        // Fruta intercalada: cerezas glaseadas y fresas lustradas
         if (i % 2 === 0) {
-          const berryGeo = new THREE.ConeGeometry(0.08, 0.15, 12);
-          berryGeo.rotateX(Math.PI);
-          const berry = new THREE.Mesh(berryGeo, strawberryMat);
-          berry.position.set(x * 0.94, 1.83, z * 0.94);
-          tier1Group.add(berry);
+          if (i % 4 === 0) {
+            // Fresa con hojitas de menta
+            const berryGeo = new THREE.ConeGeometry(0.08, 0.15, 12);
+            berryGeo.rotateX(Math.PI);
+            const berry = new THREE.Mesh(berryGeo, strawberryMat);
+            berry.position.set(x * 0.94, 1.83, z * 0.94);
+            tier1Group.add(berry);
 
-          const leafGeo = new THREE.BoxGeometry(0.045, 0.015, 0.08);
-          leafGeo.rotateY(angle);
-          const leaf = new THREE.Mesh(leafGeo, mintLeafMat);
-          leaf.position.set(x * 0.94, 1.89, z * 0.94);
-          tier1Group.add(leaf);
+            const leafGeo = new THREE.BoxGeometry(0.045, 0.015, 0.08);
+            leafGeo.rotateY(angle);
+            const leaf = new THREE.Mesh(leafGeo, mintLeafMat);
+            leaf.position.set(x * 0.94, 1.89, z * 0.94);
+            tier1Group.add(leaf);
+          } else {
+            // Cereza brillante con tallo
+            const cherry = createCherryWithStem();
+            cherry.position.set(x * 0.94, 1.84, z * 0.94);
+            tier1Group.add(cherry);
+          }
         }
       }
 
@@ -520,7 +701,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       const tier2Group = new THREE.Group();
       tier2Group.name = 'cake_tier_2';
 
-      // Cilindro del piso superior (radio 1.10, altura 0.65)
+      // Cilindro del piso superior con textura de fondant acolchada (radio 1.10, altura 0.65)
       const tier2Geo = new THREE.CylinderGeometry(1.08, 1.12, 0.65, 42);
       const tier2Mesh = new THREE.Mesh(tier2Geo, fondantMat);
       tier2Mesh.position.set(0, 2.08, 0);
@@ -534,7 +715,18 @@ export const birthdayModel: MechanicalModelDefinition = {
       tier2Belt.position.set(0, 1.78, 0);
       tier2Group.add(tier2Belt);
 
-      // 14 Rosetones de crema y fresas en el borde del piso superior
+      // Guirnalda de perlas de azúcar en la base del piso 2 (30 perlas)
+      const numPearls2 = 30;
+      const pearlRadius2 = 1.14;
+      for (let p = 0; p < numPearls2; p++) {
+        const pAngle = (p * Math.PI * 2) / numPearls2;
+        const pearlGeo = new THREE.SphereGeometry(0.03, 8, 8);
+        const pearlMesh = new THREE.Mesh(pearlGeo, p % 2 === 0 ? sugarPearlMat : goldPearlMat);
+        pearlMesh.position.set(Math.cos(pAngle) * pearlRadius2, 1.79, Math.sin(pAngle) * pearlRadius2);
+        tier2Group.add(pearlMesh);
+      }
+
+      // 14 Rosetones de crema, cerezas y fresas en el borde del piso superior
       const r2 = 0.98;
       const count2 = 14;
       for (let i = 0; i < count2; i++) {
@@ -542,18 +734,22 @@ export const birthdayModel: MechanicalModelDefinition = {
         const x = Math.cos(angle) * r2;
         const z = Math.sin(angle) * r2;
 
-        const creamGeo = new THREE.SphereGeometry(0.08, 12, 10);
-        creamGeo.scale(1, 0.8, 1);
-        const cream = new THREE.Mesh(creamGeo, frostingWhiteMat);
-        cream.position.set(x, 2.41, z);
-        tier2Group.add(cream);
+        const rosette = createSwirledRosette(0.08);
+        rosette.position.set(x, 2.41, z);
+        tier2Group.add(rosette);
 
         if (i % 2 === 1) {
-          const berryGeo = new THREE.ConeGeometry(0.07, 0.13, 10);
-          berryGeo.rotateX(Math.PI);
-          const berry = new THREE.Mesh(berryGeo, strawberryMat);
-          berry.position.set(x * 0.92, 2.46, z * 0.92);
-          tier2Group.add(berry);
+          if (i % 4 === 1) {
+            const cherry = createCherryWithStem();
+            cherry.position.set(x * 0.92, 2.47, z * 0.92);
+            tier2Group.add(cherry);
+          } else {
+            const berryGeo = new THREE.ConeGeometry(0.07, 0.13, 10);
+            berryGeo.rotateX(Math.PI);
+            const berry = new THREE.Mesh(berryGeo, strawberryMat);
+            berry.position.set(x * 0.92, 2.46, z * 0.92);
+            tier2Group.add(berry);
+          }
         }
       }
 
@@ -567,11 +763,11 @@ export const birthdayModel: MechanicalModelDefinition = {
       candlesGroup.name = 'candles_46';
 
       const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-        depth: 0.14, // Gran grosor tridimensional
+        depth: 0.16, // Gran grosor tridimensional
         bevelEnabled: true,
-        bevelThickness: 0.025,
-        bevelSize: 0.02,
-        bevelSegments: 3,
+        bevelThickness: 0.03,
+        bevelSize: 0.025,
+        bevelSegments: 4,
       };
 
       const candleBaseY = 2.41; // Cúspide del piso 2
@@ -591,7 +787,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       wick4.position.set(-0.34 + 0.08, candleBaseY + 0.77, 0);
       candlesGroup.add(wick4);
 
-      // Flama en forma de gota realista del 4 (emissive: 0xff5500, emissiveIntensity: 3.0)
+      // Flama en forma de gota realista del 4 (emissive: 0xff5500, emissiveIntensity: 3.5)
       const flame4Geo = new THREE.SphereGeometry(0.065, 14, 14);
       flame4Geo.scale(1.0, 1.85, 1.0);
       const flame4 = new THREE.Mesh(flame4Geo, flameMat);
@@ -606,7 +802,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       candlesGroup.add(flame4Core);
 
       // Luz puntual cálida y dinámica sobre el 4
-      const light4 = new THREE.PointLight(0xff9900, 3.0, 8.0);
+      const light4 = new THREE.PointLight(0xff9900, 3.2, 9.0);
       light4.position.set(-0.34 + 0.08, candleBaseY + 0.92, 0);
       candlesGroup.add(light4);
 
@@ -640,7 +836,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       candlesGroup.add(flame6Core);
 
       // Luz puntual cálida y dinámica sobre el 6
-      const light6 = new THREE.PointLight(0xff9900, 3.0, 8.0);
+      const light6 = new THREE.PointLight(0xff9900, 3.2, 9.0);
       light6.position.set(0.34 - 0.01, candleBaseY + 0.92, 0);
       candlesGroup.add(light6);
 
@@ -683,7 +879,7 @@ export const birthdayModel: MechanicalModelDefinition = {
       neonBorder.position.set(0, signCenterY, signCenterZ);
       signGroup.add(neonBorder);
 
-      // Placa central de lienzo de alta definición con el texto exacto: "¡Feliz Cumpleaños David!"
+      // Placa central de lienzo de alta definición con el texto conmemorativo
       const signTexture = createCelebrationSignTexture();
       const plaqueMat = new THREE.MeshStandardMaterial({
         map: signTexture,
