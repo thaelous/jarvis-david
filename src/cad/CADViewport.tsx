@@ -157,6 +157,7 @@ interface CADViewportProps {
   snapAllTrigger?: number;
   onExplodeChange?: (val: number) => void;
   flyInTrigger?: number;
+  onToggleToolMode?: () => void;
 }
 
 export const CADViewport: React.FC<CADViewportProps> = ({
@@ -183,6 +184,7 @@ export const CADViewport: React.FC<CADViewportProps> = ({
   snapAllTrigger,
   onExplodeChange,
   flyInTrigger,
+  onToggleToolMode,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -303,6 +305,10 @@ export const CADViewport: React.FC<CADViewportProps> = ({
     dragPlane: THREE.Plane;
     offset: THREE.Vector3;
   } | null>(null);
+
+  // Gestor de Doble Clic / Doble Toque Rápido sobre piezas 3D
+  const lastTapRef = useRef<{ time: number; x: number; y: number; partId: string } | null>(null);
+  const lastToggleTimeRef = useRef<number>(0);
 
   // Telemetry frame tracking
   const frameCountRef = useRef(0);
@@ -2034,6 +2040,30 @@ export const CADViewport: React.FC<CADViewportProps> = ({
         const hitMesh = intersects[0].object;
         const partId = hitMesh.userData.partId;
         if (partId) {
+          const now = performance.now();
+          const lastTap = lastTapRef.current;
+
+          // Gestor de Doble Toque Rápido (Móvil) / Doble Clic (PC) directamente sobre una pieza 3D
+          if (
+            lastTap &&
+            lastTap.partId === partId &&
+            now - lastTap.time < 380 &&
+            Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 35
+          ) {
+            lastTapRef.current = null;
+            lastToggleTimeRef.current = now;
+            onSelectPart(partId);
+            onToggleToolMode?.();
+            directDragStateRef.current = null;
+            if (orbitControlsRef.current) {
+              orbitControlsRef.current.enabled = true;
+              orbitControlsRef.current.enableRotate = true;
+            }
+            return;
+          }
+
+          lastTapRef.current = { time: now, x: e.clientX, y: e.clientY, partId };
+
           const group = partMeshesRef.current.get(partId);
           if (group && cameraRef.current) {
             // Plano de arrastre 3D perpendicular a la vista de cámara
@@ -2129,6 +2159,7 @@ export const CADViewport: React.FC<CADViewportProps> = ({
         }
       } else {
         // Fondo vacío: mantener rotación y deseleccionar
+        lastTapRef.current = null;
         pendingTouchRef.current = null;
         if (orbitControlsRef.current) {
           orbitControlsRef.current.enabled = true;
@@ -2139,7 +2170,7 @@ export const CADViewport: React.FC<CADViewportProps> = ({
         }
       }
     },
-    [onSelectPart]
+    [onSelectPart, onToggleToolMode]
   );
 
   const handlePointerMove = useCallback(
@@ -2353,6 +2384,48 @@ export const CADViewport: React.FC<CADViewportProps> = ({
     controls.update();
   }, [cameraPresetTrigger]);
 
+  // Gestor nativo de doble clic de escritorio (complementario al doble toque rápido)
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const now = performance.now();
+      if (now - lastToggleTimeRef.current < 450) {
+        return;
+      }
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect || !cameraRef.current) return;
+
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(x, y), cameraRef.current);
+
+      const interactableMeshes: THREE.Object3D[] = [];
+      partMeshesRef.current.forEach((group) => {
+        if (group.visible) {
+          group.traverse((child) => {
+            if (child instanceof THREE.Mesh && !child.userData.isCadEdge) {
+              interactableMeshes.push(child);
+            }
+          });
+        }
+      });
+
+      const intersects = raycaster.intersectObjects(interactableMeshes, false);
+      if (intersects.length > 0) {
+        const hitMesh = intersects[0].object;
+        const partId = hitMesh.userData.partId;
+        if (partId) {
+          lastToggleTimeRef.current = now;
+          onSelectPart(partId);
+          onToggleToolMode?.();
+        }
+      }
+    },
+    [onSelectPart, onToggleToolMode]
+  );
+
   const isLight = themeMode === 'light';
 
   return (
@@ -2362,6 +2435,7 @@ export const CADViewport: React.FC<CADViewportProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onDoubleClick={handleDoubleClick}
       style={{ touchAction: 'none' }}
       className="relative w-full h-full cursor-grab active:cursor-grabbing outline-none overflow-hidden select-none touch-none touch-none-viewport"
     >

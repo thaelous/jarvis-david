@@ -107,6 +107,12 @@ export default function App() {
     setCurrentModelId(id);
   };
 
+  // Toggle interaction mode (🖐️ Mover <-> 🔄 Rotar) on double-click/double-tap
+  const handleToggleToolMode = useCallback(() => {
+    sound.playClick(850);
+    setToolMode((prev) => (prev === 'rotate' ? 'translate' : 'rotate'));
+  }, []);
+
   // Toggle part visibility
   const handleToggleVisibility = useCallback((partId: string) => {
     setPartStates((prev) => {
@@ -409,6 +415,7 @@ export default function App() {
           snapAllTrigger={snapAllTrigger}
           onExplodeChange={handleExplodeChange}
           flyInTrigger={flyInTrigger}
+          onToggleToolMode={handleToggleToolMode}
         />
       </div>
 
