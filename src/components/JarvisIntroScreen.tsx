@@ -13,14 +13,14 @@ export const JarvisIntroScreen: React.FC<JarvisIntroScreenProps> = ({ onEnter })
   const [splashFadeOut, setSplashFadeOut] = useState<boolean>(false);
 
   useEffect(() => {
-    // 2.2s display + 0.5s fade out = 2.7s total, smooth transition to PIN code
+    // Exactly 3.0s total: 2.5s display + 0.5s fade-out, giving way to PIN code 171080
     const timerFade = setTimeout(() => {
       setSplashFadeOut(true);
-    }, 2200);
+    }, 2500);
 
     const timerEnd = setTimeout(() => {
       setShowSplashLogo(false);
-    }, 2700);
+    }, 3000);
 
     return () => {
       clearTimeout(timerFade);

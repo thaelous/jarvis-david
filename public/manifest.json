@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "CAD Workshop 3D - Simulador Mecánico Holográfico",
-  "short_name": "CAD 3D",
+  "name": "Jarvis by David Ramírez",
+  "short_name": "Jarvis by David Ramírez",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

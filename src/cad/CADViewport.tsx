@@ -88,6 +88,51 @@ const easeCadLockOvershoot = (t: number) => {
   return 0.98 + 0.02 * p + overshoot;
 };
 
+interface ModelFramingResult {
+  center: THREE.Vector3;
+  cameraPos: THREE.Vector3;
+  radius: number;
+  cameraDist: number;
+}
+
+// Adaptive Auto-Framing: Calibrated for Mobile Portrait (aspect < 1.0) and Desktop Landscape
+const calculateModelFraming = (
+  object: THREE.Object3D,
+  camera: THREE.PerspectiveCamera
+): ModelFramingResult => {
+  const box = new THREE.Box3().setFromObject(object);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+
+  const sphere = new THREE.Sphere();
+  box.getBoundingSphere(sphere);
+  const radius = Math.max(sphere.radius, 1.2);
+
+  const vFovRad = (camera.fov * Math.PI) / 180;
+  const aspect = Math.max(camera.aspect, 0.1);
+  const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * aspect);
+
+  // Distances needed to accommodate height and width comfortably:
+  const distY = (size.y * 0.5) / Math.tan(vFovRad / 2);
+  const distX = (size.x * 0.5) / Math.tan(hFovRad / 2);
+  const distSphere = radius / Math.min(Math.sin(vFovRad / 2), Math.sin(hFovRad / 2));
+
+  // Generous safety factor: 2.2x on mobile portrait (aspect < 1.0) and 1.7x on desktop
+  const safetyFactor = aspect < 1.0 ? 2.2 : 1.7;
+  const requiredDist = Math.max(distX, distY, distSphere) * safetyFactor;
+  // Ensure a wide minimum distance (at least 18 on mobile, 13 on desktop)
+  const minSafeDist = aspect < 1.0 ? 18.0 : 13.0;
+  const cameraDist = Math.max(requiredDist, minSafeDist);
+
+  // Isometric viewing vector (isometric angle: 0.65, 0.45, 0.85 normalized)
+  const dir = new THREE.Vector3(0.65, 0.45, 0.85).normalize();
+  const cameraPos = center.clone().add(dir.multiplyScalar(cameraDist));
+
+  return { center, cameraPos, radius, cameraDist };
+};
+
 interface CADViewportProps {
   modelDef: MechanicalModelDefinition;
   selectedPartId: string | null;
@@ -1504,17 +1549,6 @@ export const CADViewport: React.FC<CADViewportProps> = ({
     isManualTransformedRef.current.clear();
     physicsWorldRef.current?.clearParts();
 
-    // Reset OrbitControls camera target and frame model centered and facing forward
-    if (cameraRef.current && orbitControlsRef.current) {
-      if (modelDef.id === 'birthday_cake') {
-        cameraRef.current.position.set(0.0, 2.5, 7.8);
-        orbitControlsRef.current.target.set(0, 1.2, 0);
-      } else {
-        cameraRef.current.position.set(5.5, 4.0, 7.5);
-        orbitControlsRef.current.target.set(0, 0, 0);
-      }
-      orbitControlsRef.current.update();
-    }
 
     // Reset strictly to 0% explosion on model change
     explodeProgressRef.current = 0.0;
@@ -1681,20 +1715,11 @@ export const CADViewport: React.FC<CADViewportProps> = ({
 
     onUpdatePartStates(initialStates);
 
-    // Auto-frame camera so every model is fully visible and centered by default
+    // Adaptive Auto-Framing: Calibrated for Mobile Portrait and Desktop Landscape
     if (modelGroupRef.current && cameraRef.current && orbitControlsRef.current) {
-      const box = new THREE.Box3().setFromObject(modelGroupRef.current);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const fov = cameraRef.current.fov * (Math.PI / 180);
-      let cameraZ = Math.abs(maxDim / (2 * Math.tan(fov / 2))) * 2.4; // 2.4 safety margin ensuring complete model visibility
-      cameraZ = Math.max(cameraZ, 7.0);
-
-      orbitControlsRef.current.target.copy(center);
-      cameraRef.current.position.set(center.x + cameraZ * 0.7, center.y + cameraZ * 0.5, center.z + cameraZ * 0.9);
+      const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+      orbitControlsRef.current.target.copy(framing.center);
+      cameraRef.current.position.copy(framing.cameraPos);
       orbitControlsRef.current.update();
     }
 
@@ -1857,23 +1882,13 @@ export const CADViewport: React.FC<CADViewportProps> = ({
   useEffect(() => {
     if (!resetViewTrigger || !cameraRef.current || !orbitControlsRef.current || !modelGroupRef.current) return;
 
-    const box = new THREE.Box3().setFromObject(modelGroupRef.current);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = cameraRef.current.fov * (Math.PI / 180);
-    let cameraZ = Math.abs(maxDim / (2 * Math.tan(fov / 2))) * 2.4;
-    cameraZ = Math.max(cameraZ, 7.0);
-
-    const targetPos = new THREE.Vector3(center.x + cameraZ * 0.7, center.y + cameraZ * 0.5, center.z + cameraZ * 0.9);
+    const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
 
     cameraTweenRef.current = {
       startPos: cameraRef.current.position.clone(),
-      targetPos,
+      targetPos: framing.cameraPos.clone(),
       startTarget: orbitControlsRef.current.target.clone(),
-      targetTarget: center,
+      targetTarget: framing.center.clone(),
       startTime: performance.now(),
       duration: 450,
     };
@@ -2302,34 +2317,37 @@ export const CADViewport: React.FC<CADViewportProps> = ({
     [modelDef, onSelectPart, onSnapPart, startAnimation]
   );
 
-  // Camera Presets
+  // Camera Presets (Scaled dynamically with model framing)
   useEffect(() => {
     if (!cameraPresetTrigger || !cameraRef.current || !orbitControlsRef.current) return;
 
     const camera = cameraRef.current;
     const controls = orbitControlsRef.current;
+    const framing = modelGroupRef.current ? calculateModelFraming(modelGroupRef.current, camera) : null;
+    const center = framing ? framing.center : new THREE.Vector3(0, 0, 0);
+    const dist = framing ? framing.cameraDist : (camera.aspect < 1.0 ? 18.0 : 13.0);
 
     switch (cameraPresetTrigger) {
       case 'iso':
-        camera.position.set(5.5, 4.0, 7.5);
-        controls.target.set(0, 0, 0);
+        camera.position.set(center.x + dist * 0.65, center.y + dist * 0.45, center.z + dist * 0.85);
+        controls.target.copy(center);
         break;
       case 'front':
-        camera.position.set(0, 0, 9.5);
-        controls.target.set(0, 0, 0);
+        camera.position.set(center.x, center.y, center.z + dist * 1.15);
+        controls.target.copy(center);
         break;
       case 'side':
-        camera.position.set(9.5, 0, 0);
-        controls.target.set(0, 0, 0);
+        camera.position.set(center.x + dist * 1.15, center.y, center.z);
+        controls.target.copy(center);
         break;
       case 'top':
-        camera.position.set(0, 10.0, 0.01);
-        controls.target.set(0, 0, 0);
+        camera.position.set(center.x, center.y + dist * 1.25, center.z + 0.01);
+        controls.target.copy(center);
         break;
       case 'reset':
       default:
-        camera.position.set(5.5, 4.0, 7.5);
-        controls.target.set(0, 0, 0);
+        camera.position.set(center.x + dist * 0.65, center.y + dist * 0.45, center.z + dist * 0.85);
+        controls.target.copy(center);
         break;
     }
     controls.update();

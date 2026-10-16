@@ -104,8 +104,6 @@ export default function App() {
     setSelectedPartId(null);
     setExplodeProgress(0.0);
     setShowGhostSilhouette(false);
-    setCameraPresetTrigger('iso');
-    setTimeout(() => setCameraPresetTrigger(null), 120);
     setCurrentModelId(id);
   };
 
