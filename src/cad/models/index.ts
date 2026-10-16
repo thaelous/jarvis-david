@@ -28,5 +28,5 @@ export const MODEL_LIST = [
   { id: 'shock', label: 'Amortiguador', sub: 'Suspensión Regulable & Muelle' },
   { id: 'piston', label: 'Pistón y Biela', sub: 'Motor de Combustión Interna' },
   { id: 'mustang68', label: 'Ford Mustang \'68', sub: 'Rojo Candy PBR & Despiece Dinámico' },
-  { id: 'birthday_cake', label: 'Pastel Cumpleaños', sub: 'Pastel de Celebración PBR & Pirotecnia' },
+  { id: 'birthday_cake', label: '7. 🎁 Sorpresa', sub: 'Pastel de Celebración PBR & Pirotecnia' },
 ];

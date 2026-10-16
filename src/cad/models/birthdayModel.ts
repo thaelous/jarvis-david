@@ -227,7 +227,7 @@ const disassemblySteps: TutorialStep[] = [
 
 export const birthdayModel: MechanicalModelDefinition = {
   id: 'birthday_cake',
-  name: '7. ¡Feliz Cumpleaños David!',
+  name: '7. 🎁 Sorpresa',
   category: 'Celebración Especial / Edición Conmemorativa',
   description:
     'Pastel festivo bicapa de alta pastelería modelado proceduralmente (fondant blanco marfil/vainilla PBR, rosetones de crema batida y fresas rojas brillantes), velas numéricas 3D extruidas "46" en oro macizo con flamas vivas emisivas y luz puntual cálida, letrero frontal erguido "¡Feliz Cumpleaños David!", espectáculo pirotécnico y la melodía canónica de "Happy Birthday to You".',

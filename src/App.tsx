@@ -433,7 +433,7 @@ export default function App() {
             : 'bg-[#070b13]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)] hover:bg-cyan-950/90 hover:text-cyan-100 hover:shadow-[0_0_16px_rgba(6,182,212,0.4)]'
         } ${showPartsTree ? 'ring-2 ring-cyan-400 border-cyan-400 bg-cyan-950/40 text-cyan-200' : ''}`}
         style={{
-          bottom: 'calc(74px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(115px + env(safe-area-inset-bottom, 0px))',
           left: '16px',
           padding: '5px 10px',
           fontSize: '0.75rem',
@@ -448,7 +448,7 @@ export default function App() {
         <span className="tracking-tight">Árbol</span>
       </button>
 
-      {/* Esquina Inferior Derecha: Botón "📊 Telemetría" (bottom: 74px; right: 16px) */}
+      {/* Esquina Inferior Derecha: Botón "📊 Telemetría" */}
       <button
         id="btn-open-telemetry"
         onClick={() => {
@@ -461,7 +461,7 @@ export default function App() {
             : 'bg-[#070b13]/90 border-cyan-500/40 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)] hover:bg-cyan-950/90 hover:text-cyan-100 hover:shadow-[0_0_16px_rgba(6,182,212,0.4)]'
         } ${showTelemetry ? 'ring-2 ring-cyan-400 border-cyan-400 bg-cyan-950/40 text-cyan-200' : ''}`}
         style={{
-          bottom: 'calc(74px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(115px + env(safe-area-inset-bottom, 0px))',
           right: '16px',
           padding: '5px 10px',
           fontSize: '0.75rem',

@@ -119,11 +119,11 @@ const calculateModelFraming = (
   const distX = (size.x * 0.5) / Math.tan(hFovRad / 2);
   const distSphere = radius / Math.min(Math.sin(vFovRad / 2), Math.sin(hFovRad / 2));
 
-  // Generous safety factor: 2.2x on mobile portrait (aspect < 1.0) and 1.7x on desktop
-  const safetyFactor = aspect < 1.0 ? 2.2 : 1.7;
+  // Generous safety factor: 3.0x on mobile portrait (aspect < 1.0) and 2.2x on desktop
+  const safetyFactor = aspect < 1.0 ? 3.0 : 2.2;
   const requiredDist = Math.max(distX, distY, distSphere) * safetyFactor;
-  // Ensure a wide minimum distance (at least 18 on mobile, 13 on desktop)
-  const minSafeDist = aspect < 1.0 ? 18.0 : 13.0;
+  // Ensure a wide minimum distance (at least 26 on mobile, 19 on desktop)
+  const minSafeDist = aspect < 1.0 ? 26.0 : 19.0;
   const cameraDist = Math.max(requiredDist, minSafeDist);
 
   // Isometric viewing vector (isometric angle: 0.65, 0.45, 0.85 normalized)
@@ -1902,19 +1902,21 @@ export const CADViewport: React.FC<CADViewportProps> = ({
 
   // 4. Cinematic Fly-in Entrance Tween from distant dramatic angle to nominal CAD view
   useEffect(() => {
-    if (!flyInTrigger || !cameraRef.current || !orbitControlsRef.current) return;
+    if (!flyInTrigger || !cameraRef.current || !orbitControlsRef.current || !modelGroupRef.current) return;
 
-    // Start from far cinematic distance (16, 14, 20) zooming in smoothly
-    cameraRef.current.position.set(16.0, 14.0, 20.0);
-    orbitControlsRef.current.target.set(0, 0, 0);
+    const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
+    const startPos = framing.cameraPos.clone().add(new THREE.Vector3(8, 6, 10));
+
+    cameraRef.current.position.copy(startPos);
+    orbitControlsRef.current.target.copy(framing.center);
 
     cameraTweenRef.current = {
-      startPos: new THREE.Vector3(16.0, 14.0, 20.0),
-      targetPos: new THREE.Vector3(5.5, 4.0, 7.5),
-      startTarget: new THREE.Vector3(0, 0, 0),
-      targetTarget: new THREE.Vector3(0, 0, 0),
+      startPos,
+      targetPos: framing.cameraPos.clone(),
+      startTarget: framing.center.clone(),
+      targetTarget: framing.center.clone(),
       startTime: performance.now(),
-      duration: 1200, // Smooth 1200ms cinematic swoop
+      duration: 1200, // Smooth 1200ms cinematic swoop to the perfectly framed position
     };
   }, [flyInTrigger]);
 
