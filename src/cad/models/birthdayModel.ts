@@ -93,83 +93,97 @@ function createCelebrationSignTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-// Procedural Fondant Relief Texture (Quilted Diamond Lattice & Subtle Pastry Swags)
-function createFondantBumpTexture(): THREE.CanvasTexture {
+// Procedural Tangent-Space Normal Map for Smooth Fondant & Icing Glaze
+function createFondantNormalTexture(): THREE.CanvasTexture {
+  const width = 512;
+  const height = 256;
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = '#808080';
-    ctx.fillRect(0, 0, 1024, 512);
+  if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    // Subtle pastry grain
-    for (let i = 0; i < 4000; i++) {
-      const rx = Math.random() * 1024;
-      const ry = Math.random() * 512;
-      const gray = 124 + Math.random() * 8;
-      ctx.fillStyle = `rgb(${gray},${gray},${gray})`;
-      ctx.fillRect(rx, ry, 2, 2);
-    }
+  // 1. Generate height field with smooth rolling waves, quilted diamond seams and draped frosting swags
+  const heights = new Float32Array(width * height);
+  const step = 48;
 
-    // Quilted diamond lattice
-    const step = 64;
-    for (let x = -512; x < 1536; x += step) {
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#606060';
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + 512, 512);
-      ctx.stroke();
+  for (let y = 0; y < height; y++) {
+    const ny = y / height;
+    for (let x = 0; x < width; x++) {
+      const nx = x / width;
+      // Soft gentle rolling pastry waves (smooth rolled fondant)
+      let h = Math.sin(nx * Math.PI * 8) * Math.cos(ny * Math.PI * 6) * 0.08;
 
-      ctx.strokeStyle = '#9c9c9c';
-      ctx.beginPath();
-      ctx.moveTo(x + 1.5, 0);
-      ctx.lineTo(x + 513.5, 512);
-      ctx.stroke();
+      // Quilted diamond lattice grooves with smooth falloff
+      const u = (x + y) % step;
+      const v = (x - y + 1000 * step) % step;
+      const distU = Math.min(u, step - u);
+      const distV = Math.min(v, step - v);
+      const grooveDist = Math.min(distU, distV);
 
-      ctx.strokeStyle = '#606060';
-      ctx.beginPath();
-      ctx.moveTo(x, 512);
-      ctx.lineTo(x + 512, 0);
-      ctx.stroke();
-
-      ctx.strokeStyle = '#9c9c9c';
-      ctx.beginPath();
-      ctx.moveTo(x + 1.5, 512);
-      ctx.lineTo(x + 513.5, 0);
-      ctx.stroke();
-    }
-
-    // Scalloped frosting relief bands
-    for (const y of [128, 256, 384]) {
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#555555';
-      ctx.beginPath();
-      for (let x = 0; x <= 1024; x += 16) {
-        const offset = Math.sin((x / 16) * Math.PI) * 8;
-        if (x === 0) ctx.moveTo(x, y + offset);
-        else ctx.lineTo(x, y + offset);
+      // Smooth depression along quilted seams
+      if (grooveDist < 6) {
+        const factor = 1 - grooveDist / 6;
+        h -= factor * factor * 0.28;
       }
-      ctx.stroke();
 
-      ctx.strokeStyle = '#b0b0b0';
-      ctx.beginPath();
-      for (let x = 0; x <= 1024; x += 16) {
-        const offset = Math.sin((x / 16) * Math.PI) * 8;
-        if (x === 0) ctx.moveTo(x, y + offset - 1.5);
-        else ctx.lineTo(x, y + offset - 1.5);
+      // Scalloped draped frosting ribbons along horizontal sections
+      for (const bandY of [0.25, 0.5, 0.75]) {
+        const dy = (ny - bandY) * height;
+        const swag = Math.sin(nx * Math.PI * 16) * 5;
+        const distSwag = Math.abs(dy - swag);
+        if (distSwag < 5) {
+          const factor = 1 - distSwag / 5;
+          h += factor * 0.15;
+        }
       }
-      ctx.stroke();
+
+      heights[y * width + x] = h;
     }
   }
+
+  // 2. Convert height field to tangent-space normal map using finite difference gradients
+  const imgData = ctx.createImageData(width, height);
+  const data = imgData.data;
+  const normalStrength = 4.0;
+
+  for (let y = 0; y < height; y++) {
+    const yPrev = (y - 1 + height) % height;
+    const yNext = (y + 1) % height;
+
+    for (let x = 0; x < width; x++) {
+      const xPrev = (x - 1 + width) % width;
+      const xNext = (x + 1) % width;
+
+      // Finite difference gradients
+      const dx = (heights[y * width + xNext] - heights[y * width + xPrev]) * normalStrength;
+      const dy = (heights[yNext * width + x] - heights[yPrev * width + x]) * normalStrength;
+      const dz = 1.0;
+
+      // Normalize normal vector (N_x, N_y, N_z)
+      const len = Math.hypot(dx, dy, dz);
+      const nx = -dx / len;
+      const ny = -dy / len;
+      const nz = dz / len;
+
+      const idx = (y * width + x) * 4;
+      // Encode tangent-space normals to RGB [0, 255]
+      data[idx] = Math.round((nx * 0.5 + 0.5) * 255);     // R = X
+      data[idx + 1] = Math.round((ny * 0.5 + 0.5) * 255); // G = Y
+      data[idx + 2] = Math.round((nz * 0.5 + 0.5) * 255); // B = Z
+      data[idx + 3] = 255;                                // A
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(4, 1);
-  texture.minFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }
@@ -318,7 +332,7 @@ const disassemblySteps: TutorialStep[] = [
 
 export const birthdayModel: MechanicalModelDefinition = {
   id: 'birthday_cake',
-  name: '7. 🎁 Sorpresa',
+  name: '7. CLASSIFICATED',
   category: 'Celebración Especial / Edición Conmemorativa',
   description:
     'Pastel festivo bicapa de alta pastelería modelado proceduralmente (fondant blanco marfil/vainilla con relieve acolchado PBR, guirnaldas de crema batida, perlas de azúcar, fresas lustradas y cerezas glaseadas), velas numéricas 3D extruidas "46" en oro macizo con flamas vivas emisivas y luz puntual cálida, letrero frontal erguido "¡Feliz Cumpleaños David!", espectáculo pirotécnico y la melodía canónica de "Happy Birthday to You".',
@@ -435,20 +449,21 @@ export const birthdayModel: MechanicalModelDefinition = {
         metalness: 0.96,
       });
 
-      // Fondant suave de vainilla blanco marfil con relieve acolchado procedural
-      const fondantBump = createFondantBumpTexture();
+      // Fondant suave de vainilla blanco marfil con normalMap procedural y relieve artesanal
+      const fondantNormalMap = createFondantNormalTexture();
       const fondantMat = new THREE.MeshStandardMaterial({
         color: 0xfcf9f2,
-        roughness: 0.32,
-        metalness: 0.04,
-        bumpMap: fondantBump,
-        bumpScale: 0.035,
+        roughness: 0.28,
+        metalness: 0.03,
+        normalMap: fondantNormalMap,
+        normalScale: new THREE.Vector2(0.65, 0.65),
       });
 
+      // Crema batida de los rosetones con menor roughness (0.08) para resaltar el brillo y lustre sedoso
       const frostingWhiteMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.18,
-        metalness: 0.02,
+        roughness: 0.08,
+        metalness: 0.04,
       });
 
       const sugarPearlMat = new THREE.MeshStandardMaterial({

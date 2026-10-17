@@ -332,6 +332,18 @@ export const CADViewport: React.FC<CADViewportProps> = ({
   }>>([]);
   const lastFireworkBurstTimeRef = useRef<number>(0);
 
+  // Cámara de barrido lento cinematográfico (Slow Orbit Animation de 3s para el Modelo 7: 🎁 Sorpresa)
+  const slowOrbitRef = useRef<{
+    active: boolean;
+    startTime: number;
+    duration: number;
+    target: THREE.Vector3;
+    radius: number;
+    camY: number;
+    startAngle: number;
+    endAngle: number;
+  } | null>(null);
+
   // ⚡ Acoplar Todo Animation State
   const snapAllAnimRef = useRef<{
     active: boolean;
@@ -927,6 +939,37 @@ export const CADViewport: React.FC<CADViewportProps> = ({
           orbitControlsRef.current.target.copy(ct.targetTarget);
           orbitControlsRef.current.update();
           cameraTweenRef.current = null;
+        }
+      }
+
+      // Cámara de barrido lento cinematográfico (Slow Orbit de 3s para el Modelo 7: 🎁 Sorpresa)
+      if (slowOrbitRef.current?.active && cameraRef.current && orbitControlsRef.current) {
+        const so = slowOrbitRef.current;
+        const elapsed = now - so.startTime;
+        const progress = Math.min(1.0, elapsed / so.duration);
+        // Curva suave tipo S (smooth ease-in-out)
+        const ease = progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        const currentAngle = THREE.MathUtils.lerp(so.startAngle, so.endAngle, ease);
+        const currentY = THREE.MathUtils.lerp(so.camY + 0.35, so.camY, ease);
+
+        cameraRef.current.position.set(
+          so.target.x + so.radius * Math.sin(currentAngle),
+          currentY,
+          so.target.z + so.radius * Math.cos(currentAngle)
+        );
+        orbitControlsRef.current.target.copy(so.target);
+        orbitControlsRef.current.update();
+
+        if (progress >= 1.0) {
+          so.active = false;
+          slowOrbitRef.current = null;
+          cameraRef.current.position.set(so.target.x, so.camY, so.target.z + so.radius);
+          orbitControlsRef.current.target.copy(so.target);
+          orbitControlsRef.current.enabled = true;
+          orbitControlsRef.current.update();
         }
       }
 
@@ -1725,14 +1768,42 @@ export const CADViewport: React.FC<CADViewportProps> = ({
     if (modelGroupRef.current && cameraRef.current && orbitControlsRef.current) {
       if (modelDef.id === 'birthday_cake') {
         const isMobile = cameraRef.current.aspect < 1.0;
-        orbitControlsRef.current.target.set(0, 1.45, 0.4);
-        cameraRef.current.position.set(0, isMobile ? 2.25 : 2.05, isMobile ? 10.8 : 7.2);
+        const target = new THREE.Vector3(0, 1.45, 0.4);
+        const camY = isMobile ? 2.25 : 2.05;
+        const camZ = isMobile ? 10.8 : 7.2;
+        const radius = camZ - target.z;
+        const startAngle = -0.42; // Ángulo inicial de barrido cinematográfico (~-24°)
+        const endAngle = 0.0;     // Frente canónico exacto
+
+        // Posicionar cámara al inicio del barrido cinemático
+        cameraRef.current.position.set(
+          target.x + radius * Math.sin(startAngle),
+          camY + 0.35,
+          target.z + radius * Math.cos(startAngle)
+        );
+        orbitControlsRef.current.target.copy(target);
+        orbitControlsRef.current.enabled = false; // Bloqueo temporal durante los primeros 3 segundos cinematográficos
+        orbitControlsRef.current.update();
+
+        // Iniciar cámara de barrido lento (slow orbit animation) durante 3 segundos
+        slowOrbitRef.current = {
+          active: true,
+          startTime: performance.now(),
+          duration: 3000,
+          target,
+          radius,
+          camY,
+          startAngle,
+          endAngle,
+        };
       } else {
+        slowOrbitRef.current = null;
+        orbitControlsRef.current.enabled = true;
         const framing = calculateModelFraming(modelGroupRef.current, cameraRef.current);
         orbitControlsRef.current.target.copy(framing.center);
         cameraRef.current.position.copy(framing.cameraPos);
+        orbitControlsRef.current.update();
       }
-      orbitControlsRef.current.update();
     }
 
     // CRITICAL: CALL applyTheme(currentTheme) AT THE END OF LOADING TO GUARANTEE CALIBRATED LIGHTING & COLORS!
@@ -2069,6 +2140,15 @@ export const CADViewport: React.FC<CADViewportProps> = ({
       if (touchHoldTimerRef.current) {
         window.clearTimeout(touchHoldTimerRef.current);
         touchHoldTimerRef.current = null;
+      }
+
+      // Si el barrido cinematográfico lento está activo, ceder el control de inmediato ante la interacción del usuario
+      if (slowOrbitRef.current?.active) {
+        slowOrbitRef.current.active = false;
+        slowOrbitRef.current = null;
+        if (orbitControlsRef.current) {
+          orbitControlsRef.current.enabled = true;
+        }
       }
 
       if (intersects.length > 0) {
